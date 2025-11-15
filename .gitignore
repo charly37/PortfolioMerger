@@ -33,3 +33,6 @@ logs/
 *.swp
 *.swo
 .DS_Store 
+
+# private csv files
+*.csv
