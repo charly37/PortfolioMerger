@@ -4,7 +4,7 @@ import os
 import argparse
 import logging
 
-print("Starting to create a merged file with CS and IBKR holdings")
+print("Starting")
 
 # Set up logging configuration at the start of your script
 def setup_logging(log_file='trades.log'):  
@@ -24,13 +24,12 @@ def setup_logging(log_file='trades.log'):
 class aShare:
     def __init__(self, aSymbol):
         self.symbol = aSymbol
-        self.nbSharesCs = 0
-        self.nbSharesIbkr = 0
+        self.nbShares = 0
         self.sharePrice = 0
         self.value = 0
 
     def __str__(self):
-        return f"{self.symbol}({self.nbSharesCs};{self.nbSharesIbkr})"
+        return f"{self.symbol}({self.nbShares};{self.sharePrice})"
 
 def isItProperSymbol(aSymbol):
     return bool(re.fullmatch(r"[A-Za-z]{2,5}|\w+\/\w+", aSymbol))
@@ -41,6 +40,8 @@ def parse_arguments():
                       help='List of paths to the CS holdings CSV files (default: CS.csv)')
     parser.add_argument('--ibkr-file', default='IBKR.csv',
                       help='Path to the IBKR holdings CSV file (default: IBKR.csv)')
+    parser.add_argument('--files', nargs='+',
+                      help='List of files to process (auto-detects CS or IBKR format)')
     parser.add_argument('--output', default='holdings.csv',
                       help='Output file path (default: holdings.csv)')
     return parser.parse_args()
@@ -57,8 +58,8 @@ def loadSharesCs(ioaShares, filename):
                     logging.error(f"Invalid symbol: {aTicker}")
                     raise ValueError(f"Invalid symbol: {aTicker}")
                 aNewShare = aShare(aTicker)
-                aNewShare.nbSharesCs = int(row[3])
-                logging.debug(f"aNewShare.nbSharesCs: {aNewShare.nbSharesCs}")
+                aNewShare.nbShares = int(row[3])
+                logging.debug(f"aNewShare.nbShares: {aNewShare.nbShares}")
                 aNewShare.sharePrice = float(row[4][1:])
                 ioaShares.append(aNewShare)
             except:
@@ -70,7 +71,7 @@ def loadSharesIBKR(ioaShares, filename):
         for row in spamreader:
             try:    
                 aNewShare = aShare(row[0].strip('\"'))
-                aNewShare.nbSharesIbkr = int(row[1].strip('\"'))
+                aNewShare.nbShares = int(row[1].strip('\"'))
                 #Some holdings are only on IBKR so if we don t get the price from there file we miss it in the final output
                 aIbkrSharePrice = float(row[2].strip('\"'))
                 aNewShare.sharePrice = aIbkrSharePrice
@@ -78,13 +79,60 @@ def loadSharesIBKR(ioaShares, filename):
             except:
                 logging.error(f"Error in IBKR filewith row: {row}")
 
+def detect_file_type(filename):
+    """
+    Detect if a CSV file is from CS or IBKR by examining its header or structure.
+    
+    Args:
+        filename: Path to the CSV file
+        
+    Returns:
+        'cs' for Charles Schwab files, 'ibkr' for Interactive Brokers files
+    """
+    logging.debug(f"Starting file type detection for: {filename}")
+    
+    with open(filename, 'r', newline='') as csvfile:
+        # Read first line to detect format
+        first_line = csvfile.readline().strip()
+        logging.debug(f"First line: {first_line}")
+        
+        # Check if first line starts with "Positions for account Brokerage" (CS format)
+        if first_line.startswith("Positions for account") or first_line.startswith('"Positions for account'):
+            logging.debug(f"Detected CS format (first line starts with 'Positions for account')")
+            return 'cs'
+        
+        # Check if first line starts with "Symbol" (IBKR format)
+        if first_line.startswith('"Symbol"') or first_line.startswith('Symbol'):
+            logging.debug(f"Detected IBKR format (first line starts with 'Symbol')")
+            return 'ibkr'
+    
+    # Unable to detect file type - raise an error
+    error_msg = f"Unable to detect file type for {filename}. File must start with either 'Positions for account Brokerage' (CS) or '\"Symbol\"' (IBKR)"
+    logging.error(error_msg)
+    raise ValueError(error_msg)
+
+def load_shares_generic(ioaShares, filename):
+    """
+    Generic function to load shares from a file, automatically detecting the format.
+    
+    Args:
+        ioaShares: List to append share objects to
+        filename: Path to the CSV file
+    """
+    file_type = detect_file_type(filename)
+    logging.info(f"Detected file type '{file_type}' for {filename}")
+    
+    if file_type == 'cs':
+        loadSharesCs(ioaShares, filename)
+    else:
+        loadSharesIBKR(ioaShares, filename)
+
 # Custom merge function
 def merge_objects(iShare1, iShare2):
     if iShare1 and iShare2:  # Both objects exist
         aMergedShare = aShare(iShare1.symbol)
-        aMergedShare.nbSharesCs = iShare1.nbSharesCs + iShare2.nbSharesCs   
-        aMergedShare.nbSharesIbkr = iShare1.nbSharesIbkr + iShare2.nbSharesIbkr
-        #Verify if we have a price for both shares
+        aMergedShare.nbShares = iShare1.nbShares + iShare2.nbShares  
+        #Verify if we have a price for both stock
         if iShare1.sharePrice and iShare2.sharePrice:
             if not prices_within_range(iShare1.sharePrice, iShare2.sharePrice):
                 logging.error(f"Prices for {iShare1.symbol} are not within range: {iShare1.sharePrice} vs {iShare2.sharePrice}")
@@ -115,14 +163,14 @@ def merge_lists(list1, list2, merge_func):
     
     return merged_list
 
-def prices_within_range(price1, price2, percent_range=5):
+def prices_within_range(price1, price2, percent_range=10):
     """
     Check if two prices are within a specified percentage range of each other.
     
     Args:
         price1: First price
         price2: Second price
-        percent_range: Percentage range allowed (default 5%)
+        percent_range: Percentage range allowed (default 10%)
         
     Returns:
         Boolean indicating if prices are within range
@@ -136,7 +184,7 @@ def prices_within_range(price1, price2, percent_range=5):
     percent_diff = (difference / avg_price) * 100
     
     return percent_diff <= percent_range
-
+    
 if __name__ == "__main__":
     args = parse_arguments()
 
@@ -145,25 +193,38 @@ if __name__ == "__main__":
     aSharesIBKR = []
     aTotalShares = []
 
-    print("Loading CS share infos")
-    aCsFiles = args.cs_files
-    for cs_file in aCsFiles:   
-        print(f"Loading CS share infos from file: {cs_file}") 
-        aTempShares = []
-        loadSharesCs(aTempShares, cs_file)
-        aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
-        print(f"Total shares after merging file {cs_file}: {len(aTotalShares)}")
+    # Use generic file loading if --files is provided
+    if args.files:
+        print("Loading share infos from provided files (auto-detecting format)")
+        for file_path in args.files:
+            print(f"Loading share infos from file: {file_path}")
+            aTempShares = []
+            load_shares_generic(aTempShares, file_path)
+            aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
+            print(f"Total shares after merging file {file_path}: {len(aTotalShares)}")
+    else:
+        # Legacy mode: use separate CS and IBKR files
+        print("Loading CS share infos")
+        aCsFiles = args.cs_files
+        for cs_file in aCsFiles:   
+            print(f"Loading CS share infos from file: {cs_file}") 
+            aTempShares = []
+            loadSharesCs(aTempShares, cs_file)
+            aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
+            print(f"Total shares after merging file {cs_file}: {len(aTotalShares)}")
 
-    print("Loading IBKR share info")
-    loadSharesIBKR(aSharesIBKR, args.ibkr_file)
+        print("Loading IBKR share info")
+        loadSharesIBKR(aSharesIBKR, args.ibkr_file)
+
+        aTotalShares = merge_lists(aTotalShares, aSharesIBKR, merge_objects)
 
     aTotalShares = merge_lists(aTotalShares, aSharesIBKR, merge_objects)
 
     logging.info(f"Writing positions to file: {args.output}")
     with open(args.output, 'w', newline='') as file2:
         writer = csv.writer(file2)
-        field = ["ticker", "nbSharesCs", "nbSharesIbkr", "price"]
+        field = ["ticker", "nbShares", "price"]
         
         writer.writerow(field)
         for aShare in aTotalShares:
-            writer.writerow([aShare.symbol, aShare.nbSharesCs, aShare.nbSharesIbkr, aShare.sharePrice])
+            writer.writerow([aShare.symbol, aShare.nbShares, aShare.sharePrice])
