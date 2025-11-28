@@ -13,7 +13,7 @@ def setup_logging(log_file='trades.log'):
     
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.WARN,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
             logging.FileHandler(log_path),
@@ -33,12 +33,12 @@ class aShare:
         return f"{self.symbol}({self.nbSharesCs};{self.nbSharesIbkr})"
 
 def isItProperSymbol(aSymbol):
-    return bool(re.fullmatch(r"[A-Za-z]{2,4}|\w+\/\w+", aSymbol))
+    return bool(re.fullmatch(r"[A-Za-z]{2,5}|\w+\/\w+", aSymbol))
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process shares data from CS and IBKR.')
-    parser.add_argument('--cs-file', default='CS.csv',
-                      help='Path to the CS holdings CSV file (default: CS.csv)')
+    parser.add_argument('--cs-files', nargs='+', default=['CS.csv'],
+                      help='List of paths to the CS holdings CSV files (default: CS.csv)')
     parser.add_argument('--ibkr-file', default='IBKR.csv',
                       help='Path to the IBKR holdings CSV file (default: IBKR.csv)')
     parser.add_argument('--output', default='holdings.csv',
@@ -48,15 +48,18 @@ def parse_arguments():
 
 def loadSharesCs(ioaShares, filename):
     with open(filename, newline='') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        spamreader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in spamreader:
             try:    
-                aTicker = row[0].strip('\"')
+                aTicker = row[0]
+                logging.debug(f"Processing CS ticker: {aTicker}")
                 if not isItProperSymbol(aTicker):
+                    logging.error(f"Invalid symbol: {aTicker}")
                     raise ValueError(f"Invalid symbol: {aTicker}")
                 aNewShare = aShare(aTicker)
-                aNewShare.nbSharesCs = int(row[2].strip('\"'))
-                aNewShare.sharePrice = float(row[3].strip('\"')[1:])
+                aNewShare.nbSharesCs = int(row[3])
+                logging.debug(f"aNewShare.nbSharesCs: {aNewShare.nbSharesCs}")
+                aNewShare.sharePrice = float(row[4][1:])
                 ioaShares.append(aNewShare)
             except:
                 logging.error(f"Error in CS file with row: {row}")
@@ -139,17 +142,22 @@ if __name__ == "__main__":
 
     setup_logging()
     
-    aSharesCS = []
     aSharesIBKR = []
     aTotalShares = []
 
-    print("Loading CS share info")
-    loadSharesCs(aSharesCS, args.cs_file)
+    print("Loading CS share infos")
+    aCsFiles = args.cs_files
+    for cs_file in aCsFiles:   
+        print(f"Loading CS share infos from file: {cs_file}") 
+        aTempShares = []
+        loadSharesCs(aTempShares, cs_file)
+        aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
+        print(f"Total shares after merging file {cs_file}: {len(aTotalShares)}")
 
     print("Loading IBKR share info")
     loadSharesIBKR(aSharesIBKR, args.ibkr_file)
 
-    aTotalShares = merge_lists(aSharesCS, aSharesIBKR, merge_objects)
+    aTotalShares = merge_lists(aTotalShares, aSharesIBKR, merge_objects)
 
     logging.info(f"Writing positions to file: {args.output}")
     with open(args.output, 'w', newline='') as file2:
