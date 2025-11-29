@@ -4,7 +4,7 @@ import os
 import argparse
 import logging
 
-print("Starting")
+print("Starting PortfolioMerger - Merging positions from CS and IBKR")
 
 # Set up logging configuration at the start of your script
 def setup_logging(log_file='trades.log'):  
