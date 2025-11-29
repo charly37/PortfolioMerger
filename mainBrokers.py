@@ -36,10 +36,6 @@ def isItProperSymbol(aSymbol):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process shares data from CS and IBKR.')
-    parser.add_argument('--cs-files', nargs='+', default=['CS.csv'],
-                      help='List of paths to the CS holdings CSV files (default: CS.csv)')
-    parser.add_argument('--ibkr-file', default='IBKR.csv',
-                      help='Path to the IBKR holdings CSV file (default: IBKR.csv)')
     parser.add_argument('--files', nargs='+',
                       help='List of files to process (auto-detects CS or IBKR format)')
     parser.add_argument('--output', default='holdings.csv',

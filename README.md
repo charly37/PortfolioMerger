@@ -5,22 +5,20 @@ Portfolio management tool for merging positions and trades from multiple brokers
 ## Scripts
 
 ### mainBrokers.py
-Creates a single output file with all positions from all brokers.
+Creates a single output file with all positions from all brokers. Automatically detects whether files are from Charles Schwab or Interactive Brokers.
 
 **Usage:**
 ```bash
-# Auto-detect file format (CS or IBKR)
+# Process multiple files (auto-detects CS or IBKR format)
 python mainBrokers.py --files file1.csv file2.csv file3.csv --output holdings.csv
 
-# Or specify file types explicitly
-python mainBrokers.py --cs-files CS1.csv CS2.csv --ibkr-file IBKR.csv --output holdings.csv
+# With default output filename
+python mainBrokers.py --files CS1.csv CS2.csv IBKR.csv
 ```
 
 **Arguments:**
-- `--files`: List of CSV files (auto-detects CS or IBKR format)
-- `--cs-files`: List of Charles Schwab holdings files
-- `--ibkr-file`: Interactive Brokers holdings file
-- `--output`: Output file name (default: `holdings.csv`)
+- `--files`: List of CSV files to process (required) - automatically detects CS or IBKR format
+- `--output`: Output file path (optional, default: `holdings.csv`)
 
 ### mainTrades.py
 Creates a single output file with all trades from all brokers.
