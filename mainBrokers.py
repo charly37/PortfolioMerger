@@ -6,6 +6,11 @@ import logging
 
 print("Starting PortfolioMerger - Merging positions from CS and IBKR")
 
+# Custom exception for options
+class OptionDetectedException(Exception):
+    """Raised when an option symbol is detected and should be skipped"""
+    pass
+
 # Set up logging configuration at the start of your script
 def setup_logging(log_file='trades.log'):  
     # Full path for log file
@@ -34,6 +39,10 @@ class aShare:
 def isItProperSymbol(aSymbol):
     return bool(re.fullmatch(r"[A-Za-z]{2,5}|\w+\/\w+", aSymbol))
 
+def isItOption(aSymbol):
+    # Matches option format: "SPY 12/19/2025 550.00 P"
+    return bool(re.fullmatch(r"[A-Z]+\s+\d{1,2}/\d{1,2}/\d{4}\s+\d+\.\d{2}\s+[PC]", aSymbol))
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process shares data from CS and IBKR.')
     parser.add_argument('--files', nargs='+',
@@ -42,22 +51,35 @@ def parse_arguments():
                       help='Output file path (default: holdings.csv)')
     return parser.parse_args()
 
+def parseLineCs(aLine):
+    try:
+        aTicker = aLine[0]
+        logging.debug(f"Processing CS ticker: {aTicker}")
+        if isItOption(aTicker):
+            logging.debug(f"Skipping option: {aTicker}")
+            raise OptionDetectedException(f"Option detected: {aTicker}")
+        if not isItProperSymbol(aTicker):
+            logging.debug(f"Invalid symbol: {aTicker}")
+            raise ValueError(f"Invalid symbol: {aTicker}")
+        aNewShare = aShare(aTicker)
+        aNewShare.nbShares = int(aLine[3])
+        logging.debug(f"aNewShare.nbShares: {aNewShare.nbShares}")
+        aNewShare.sharePrice = float(aLine[4][1:])
+        return aNewShare
+    except Exception as e:
+        logging.error(f"Error in CS file with row: {aLine}")
+        raise e
+
 
 def loadSharesCs(ioaShares, filename):
     with open(filename, newline='') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in spamreader:
             try:    
-                aTicker = row[0]
-                logging.debug(f"Processing CS ticker: {aTicker}")
-                if not isItProperSymbol(aTicker):
-                    logging.error(f"Invalid symbol: {aTicker}")
-                    raise ValueError(f"Invalid symbol: {aTicker}")
-                aNewShare = aShare(aTicker)
-                aNewShare.nbShares = int(row[3])
-                logging.debug(f"aNewShare.nbShares: {aNewShare.nbShares}")
-                aNewShare.sharePrice = float(row[4][1:])
-                ioaShares.append(aNewShare)
+                aNewShare1 = parseLineCs(row)
+                ioaShares.append(aNewShare1)
+            except OptionDetectedException as e:
+                logging.info(e)
             except:
                 logging.error(f"Error in CS file with row: {row}")
 
