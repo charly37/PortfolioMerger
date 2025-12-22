@@ -87,7 +87,7 @@ def run_test():
             
             # Check header
             header = rows[0]
-            expected_header = ['ticker', 'nbShares', 'price']
+            expected_header = ['ticker', 'nbShares', 'price', 'target']
             if header != expected_header:
                 print(f"   ✗ Invalid header. Expected {expected_header}, got {header}")
                 return False
@@ -103,11 +103,11 @@ def run_test():
             
             # Display sample rows
             print("\n   Sample output (first 10 rows):")
-            print(f"   {'Ticker':<10} {'Shares':<15} {'Price':<15}")
-            print(f"   {'-'*10} {'-'*15} {'-'*15}")
+            print(f"   {'Ticker':<10} {'Shares':<15} {'Price':<15} {'Target':<10}")
+            print(f"   {'-'*10} {'-'*15} {'-'*15} {'-'*10}")
             for row in data_rows[:10]:
-                if len(row) == 3:
-                    print(f"   {row[0]:<10} {row[1]:<15} {row[2]:<15}")
+                if len(row) == 4:
+                    print(f"   {row[0]:<10} {row[1]:<15} {row[2]:<15} {row[3]:<10}")
             
             if len(data_rows) > 10:
                 print(f"   ... and {len(data_rows) - 10} more")
@@ -115,11 +115,11 @@ def run_test():
             # Validate data format
             invalid_rows = []
             for i, row in enumerate(data_rows, start=2):
-                if len(row) != 3:
+                if len(row) != 4:
                     invalid_rows.append(f"Row {i}: Wrong number of columns ({len(row)})")
                     continue
                 
-                ticker, shares, price = row
+                ticker, shares, price, target = row
                 
                 # Validate shares is a number
                 try:
@@ -132,6 +132,13 @@ def run_test():
                     float(price)
                 except ValueError:
                     invalid_rows.append(f"Row {i}: Invalid price value '{price}'")
+                
+                # Validate target is a number or empty
+                if target:
+                    try:
+                        float(target)
+                    except ValueError:
+                        invalid_rows.append(f"Row {i}: Invalid target value '{target}'")
             
             if invalid_rows:
                 print(f"\n   ✗ Found {len(invalid_rows)} invalid row(s):")

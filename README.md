@@ -14,11 +14,35 @@ python mainBrokers.py --files file1.csv file2.csv file3.csv --output holdings.cs
 
 # With default output filename
 python mainBrokers.py --files CS1.csv CS2.csv IBKR.csv
+
+# Enable debug logging for troubleshooting
+python mainBrokers.py --files file1.csv file2.csv --debug
 ```
 
 **Arguments:**
 - `--files`: List of CSV files to process (required) - automatically detects CS or IBKR format
 - `--output`: Output file path (optional, default: `holdings.csv`)
+- `--debug`: Enable debug logging level for detailed diagnostic information (optional)
+
+**Output Format:**
+The output CSV file contains the following columns:
+- `ticker`: Stock symbol
+- `nbShares`: Number of shares held
+- `price`: Current share price
+- `target`: Target allocation for the stock (from targets file)
+
+**Targets File:**
+The script reads target allocations from a `targets` file (JSON format) in the root directory. This file maps stock symbols to their target allocation weights:
+
+```json
+{
+    "SHV": 10,
+    "SHY": 11,
+    "VTI": 5
+}
+```
+
+If a stock is missing from the targets file, an error will be logged and the target column will be empty for that stock.
 
 ### mainTrades.py
 Creates a single output file with all trades from all brokers.

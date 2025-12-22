@@ -3,6 +3,7 @@ import csv
 import os
 import argparse
 import logging
+import json
 
 print("Starting PortfolioMerger - Merging positions from CS and IBKR")
 
@@ -12,13 +13,16 @@ class OptionDetectedException(Exception):
     pass
 
 # Set up logging configuration at the start of your script
-def setup_logging(log_file='trades.log'):  
+def setup_logging(log_file='trades.log', debug=False):  
     # Full path for log file
     log_path = os.path.join("./", log_file)
     
+    # Set log level based on debug flag
+    log_level = logging.DEBUG if debug else logging.WARN
+    
     # Configure logging
     logging.basicConfig(
-        level=logging.WARN,
+        level=log_level,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
             logging.FileHandler(log_path),
@@ -49,6 +53,8 @@ def parse_arguments():
                       help='List of files to process (auto-detects CS or IBKR format)')
     parser.add_argument('--output', default='holdings.csv',
                       help='Output file path (default: holdings.csv)')
+    parser.add_argument('--debug', action='store_true',
+                      help='Enable debug logging level')
     return parser.parse_args()
 
 def parseLineCs(aLine):
@@ -66,6 +72,9 @@ def parseLineCs(aLine):
         logging.debug(f"aNewShare.nbShares: {aNewShare.nbShares}")
         aNewShare.sharePrice = float(aLine[4][1:])
         return aNewShare
+    except OptionDetectedException as e:
+        logging.info(e)
+        raise e
     except Exception as e:
         logging.error(f"Error in CS file with row: {aLine}")
         raise e
@@ -202,11 +211,33 @@ def prices_within_range(price1, price2, percent_range=10):
     percent_diff = (difference / avg_price) * 100
     
     return percent_diff <= percent_range
+
+def load_targets(targets_file='targets'):
+    """
+    Load targets from JSON file.
+    
+    Args:
+        targets_file: Path to the targets JSON file
+        
+    Returns:
+        Dictionary mapping stock symbols to target values
+    """
+    try:
+        with open(targets_file, 'r') as f:
+            targets = json.load(f)
+        logging.info(f"Loaded {len(targets)} targets from {targets_file}")
+        return targets
+    except FileNotFoundError:
+        logging.warning(f"Targets file '{targets_file}' not found. No targets will be added.")
+        return {}
+    except json.JSONDecodeError as e:
+        logging.error(f"Error parsing targets file: {e}")
+        return {}
     
 if __name__ == "__main__":
     args = parse_arguments()
 
-    setup_logging()
+    setup_logging(debug=args.debug)
     
     aSharesIBKR = []
     aTotalShares = []
@@ -238,11 +269,17 @@ if __name__ == "__main__":
 
     aTotalShares = merge_lists(aTotalShares, aSharesIBKR, merge_objects)
 
+    # Load targets
+    targets = load_targets('targets')
+    
     logging.info(f"Writing positions to file: {args.output}")
     with open(args.output, 'w', newline='') as file2:
         writer = csv.writer(file2)
-        field = ["ticker", "nbShares", "price"]
+        field = ["ticker", "nbShares", "price", "target"]
         
         writer.writerow(field)
         for aShare in aTotalShares:
-            writer.writerow([aShare.symbol, aShare.nbShares, aShare.sharePrice])
+            target_value = targets.get(aShare.symbol, "")
+            if not target_value:
+                logging.error(f"Missing target for stock: {aShare.symbol}")
+            writer.writerow([aShare.symbol, aShare.nbShares, aShare.sharePrice, target_value])
