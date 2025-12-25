@@ -5,11 +5,19 @@ import argparse
 import logging
 import json
 
-print("Starting PortfolioMerger - Merging positions from CS and IBKR")
-
 # Custom exception for options
 class OptionDetectedException(Exception):
     """Raised when an option symbol is detected and should be skipped"""
+    pass
+
+# Custom exception for empty lines
+class EmptyLineException(Exception):
+    """Raised when an empty line is encountered and should be skipped"""
+    pass
+
+# Custom exception for single stocks
+class SingleStockDetectedException(Exception):
+    """Raised when a single stock is detected and should be skipped"""
     pass
 
 # Set up logging configuration at the start of your script
@@ -47,6 +55,10 @@ def isItOption(aSymbol):
     # Matches option format: "SPY 12/19/2025 550.00 P"
     return bool(re.fullmatch(r"[A-Z]+\s+\d{1,2}/\d{1,2}/\d{4}\s+\d+\.\d{2}\s+[PC]", aSymbol))
 
+def isItASingleStock(aSymbol):
+    single_stocks = ['BILI', 'VEOEY', 'RGTZ', 'PDBA', 'AMZN', 'AMC', 'SPIP', 'BRK/B', 'GOOGL', 'CLSK']
+    return aSymbol.upper() in single_stocks
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process shares data from CS and IBKR.')
     parser.add_argument('--files', nargs='+',
@@ -58,12 +70,19 @@ def parse_arguments():
     return parser.parse_args()
 
 def parseLineCs(aLine):
+    # Ignore empty lines
+    if not aLine or all(not cell.strip() for cell in aLine):
+        raise EmptyLineException("Empty line")
+    
     try:
         aTicker = aLine[0]
         logging.debug(f"Processing CS ticker: {aTicker}")
         if isItOption(aTicker):
             logging.debug(f"Skipping option: {aTicker}")
             raise OptionDetectedException(f"Option detected: {aTicker}")
+        if isItASingleStock(aTicker):
+            logging.debug(f"Skipping single stock: {aTicker}")
+            raise SingleStockDetectedException(f"Single stock detected: {aTicker}")
         if not isItProperSymbol(aTicker):
             logging.debug(f"Invalid symbol: {aTicker}")
             raise ValueError(f"Invalid symbol: {aTicker}")
@@ -73,10 +92,8 @@ def parseLineCs(aLine):
         aNewShare.sharePrice = float(aLine[4][1:])
         return aNewShare
     except OptionDetectedException as e:
-        logging.info(e)
         raise e
     except Exception as e:
-        logging.error(f"Error in CS file with row: {aLine}")
         raise e
 
 
@@ -89,22 +106,57 @@ def loadSharesCs(ioaShares, filename):
                 ioaShares.append(aNewShare1)
             except OptionDetectedException as e:
                 logging.info(e)
+            except SingleStockDetectedException as e:
+                logging.info(e)
+            except EmptyLineException:
+                logging.debug("Skipping empty line")
             except:
                 logging.error(f"Error in CS file with row: {row}")
+
+def parseLineIBKR(aLine):
+    # Ignore empty lines
+    if not aLine or all(not cell.strip() for cell in aLine):
+        raise EmptyLineException("Empty line")
+    
+    try:
+        aTicker = aLine[0].strip('\"')
+        logging.debug(f"Processing IBKR ticker: {aTicker}")
+        if isItOption(aTicker):
+            logging.debug(f"Skipping option: {aTicker}")
+            raise OptionDetectedException(f"Option detected: {aTicker}")
+        if isItASingleStock(aTicker):
+            logging.debug(f"Skipping single stock: {aTicker}")
+            raise SingleStockDetectedException(f"Single stock detected: {aTicker}")
+        if not isItProperSymbol(aTicker):
+            logging.debug(f"Invalid symbol: {aTicker}")
+            raise ValueError(f"Invalid symbol: {aTicker}")
+        
+        aNewShare = aShare(aTicker)
+        aNewShare.nbShares = int(aLine[1].strip('\"'))
+        # Some holdings are only on IBKR so if we don't get the price from there file we miss it in the final output
+        aIbkrSharePrice = float(aLine[2].strip('\"'))
+        aNewShare.sharePrice = aIbkrSharePrice
+        return aNewShare
+    except (OptionDetectedException, SingleStockDetectedException):
+        raise
+    except Exception as e:
+        raise e
 
 def loadSharesIBKR(ioaShares, filename):
     with open(filename, newline='') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in spamreader:
-            try:    
-                aNewShare = aShare(row[0].strip('\"'))
-                aNewShare.nbShares = int(row[1].strip('\"'))
-                #Some holdings are only on IBKR so if we don t get the price from there file we miss it in the final output
-                aIbkrSharePrice = float(row[2].strip('\"'))
-                aNewShare.sharePrice = aIbkrSharePrice
-                ioaShares.append(aNewShare)   
+            try:
+                aNewShare = parseLineIBKR(row)
+                ioaShares.append(aNewShare)
+            except OptionDetectedException as e:
+                logging.info(e)
+            except SingleStockDetectedException as e:
+                logging.info(e)
+            except EmptyLineException:
+                logging.debug("Skipping empty line")
             except:
-                logging.error(f"Error in IBKR filewith row: {row}")
+                logging.error(f"Error in IBKR file with row: {row}")
 
 def detect_file_type(filename):
     """
@@ -233,36 +285,69 @@ def load_targets(targets_file='targets'):
     except json.JSONDecodeError as e:
         logging.error(f"Error parsing targets file: {e}")
         return {}
+
+def validate_targets_sum(targets):
+    """
+    Validate that the sum of all target values does not exceed 100.
+    
+    Args:
+        targets: Dictionary mapping stock symbols to target objects with 'target' and 'notes' fields
+        
+    Returns:
+        Boolean indicating if targets are valid
+    """
+    if not targets:
+        logging.warning("No targets to validate")
+        return True
+    
+    try:
+        # Convert all target values to float and sum them
+        total = sum(float(value['target']) for value in targets.values() if value and 'target' in value)
+        logging.info(f"Total target allocation: {total}%")
+        
+        if total > 100:
+            logging.error(f"Target allocation exceeds 100%: {total}%")
+            return False
+        elif total < 100:
+            logging.warning(f"Target allocation is less than 100%: {total}%")
+        else:
+            logging.info(f"Target allocation is exactly 100%")
+        
+        return True
+    except (ValueError, TypeError) as e:
+        logging.error(f"Error validating targets: {e}")
+        return False
     
 if __name__ == "__main__":
     args = parse_arguments()
 
     setup_logging(debug=args.debug)
+    logging.info("Starting PortfolioMerger - Merging positions from CS and IBKR")
     
     aSharesIBKR = []
     aTotalShares = []
 
     # Use generic file loading if --files is provided
     if args.files:
-        print("Loading share infos from provided files (auto-detecting format)")
+        logging.info("Loading share infos from provided files (auto-detecting format)")
         for file_path in args.files:
-            print(f"Loading share infos from file: {file_path}")
+            logging.debug(f"Loading share infos from file: {file_path}")
             aTempShares = []
             load_shares_generic(aTempShares, file_path)
             aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
-            print(f"Total shares after merging file {file_path}: {len(aTotalShares)}")
+            logging.info(f"Total shares after merging file {file_path}: {len(aTotalShares)}")
     else:
         # Legacy mode: use separate CS and IBKR files
-        print("Loading CS share infos")
+        logging.info("Loading CS share infos")
         aCsFiles = args.cs_files
         for cs_file in aCsFiles:   
-            print(f"Loading CS share infos from file: {cs_file}") 
+            logging.info(f"Loading CS share infos from file: {cs_file}") 
             aTempShares = []
             loadSharesCs(aTempShares, cs_file)
             aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
-            print(f"Total shares after merging file {cs_file}: {len(aTotalShares)}")
+            logging.info(f"Total shares after merging file {cs_file}: {len(aTotalShares)}")
 
-        print("Loading IBKR share info")
+        logging.info("Loading IBKR share info")
         loadSharesIBKR(aSharesIBKR, args.ibkr_file)
 
         aTotalShares = merge_lists(aTotalShares, aSharesIBKR, merge_objects)
@@ -271,15 +356,18 @@ if __name__ == "__main__":
 
     # Load targets
     targets = load_targets('targets')
+    validate_targets_sum(targets)
     
     logging.info(f"Writing positions to file: {args.output}")
     with open(args.output, 'w', newline='') as file2:
         writer = csv.writer(file2)
-        field = ["ticker", "nbShares", "price", "target"]
+        field = ["ticker", "notes", "nbShares", "price", "target"]
         
         writer.writerow(field)
         for aShare in aTotalShares:
-            target_value = targets.get(aShare.symbol, "")
+            target_obj = targets.get(aShare.symbol, {})
+            target_value = target_obj.get('target', '') if target_obj else ''
+            notes_value = target_obj.get('notes', '') if target_obj else ''
             if not target_value:
                 logging.error(f"Missing target for stock: {aShare.symbol}")
-            writer.writerow([aShare.symbol, aShare.nbShares, aShare.sharePrice, target_value])
+            writer.writerow([aShare.symbol, notes_value, aShare.nbShares, aShare.sharePrice, target_value])
