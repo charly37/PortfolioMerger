@@ -1,24 +1,3 @@
-to export all the positions from IBKR and CS to a single file
-
-python mainBrokers.py --files ./CS.csv ./IBKR.csv --output holdings.csv
-
-# Enable debug mode for detailed logging
-python mainBrokers.py --files ./CS.csv ./IBKR.csv --debug
-
-## Target Allocations
-
-The output includes a `target` column that shows your target allocation for each stock. These targets are read from a `targets` file in JSON format:
-
-```json
-{
-    "SHV": 10,
-    "SHY": 11,
-    "VTI": 5
-}
-```
-
-The script will log an error for any stock that doesn't have a defined target.
-
 ## Export Instructions
 
 to export from Charles Schwab your position as csv
