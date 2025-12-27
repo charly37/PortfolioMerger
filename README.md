@@ -5,7 +5,7 @@ Portfolio management tool for merging positions and trades from multiple brokers
 ## Scripts
 
 ### mainBrokers.py
-Merges position files from multiple brokers (Charles Schwab and Interactive Brokers) into a single consolidated output file. Automatically detects broker format and enriches data with target allocations and notes.
+Merges position files from multiple brokers (Charles Schwab and Interactive Brokers) into a single consolidated output file. Automatically detects broker format and enriches data with target allocations and descriptions.
 
 [Full Documentation](documentation/mainBrokers.md)
 

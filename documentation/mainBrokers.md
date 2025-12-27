@@ -29,25 +29,25 @@ python mainBrokers.py --files file1.csv file2.csv --debug
 
 The output CSV file contains the following columns:
 - `ticker`: Stock symbol
-- `notes`: Description or note about the stock (from targets file)
+- `description`: Description or note about the stock (from targets file)
 - `nbShares`: Number of shares held
 - `price`: Current share price
 - `target`: Target allocation for the stock (from targets file)
 
 ## Targets File
 
-The script reads target allocations from a `targets` file (JSON format) in the root directory. This file maps stock symbols to objects containing their target allocation weights and descriptive notes:
+The script reads target allocations from a `targets` file (JSON format) in the root directory. This file maps stock symbols to objects containing their target allocation weights and descriptive descriptions:
 
 ```json
 {
-    "SHV": {"target": 4.5, "notes": "0-1 yr treas. ETF"},
-    "SHY": {"target": 4.5, "notes": "1-3 yr treas. ETF"},
-    "VTI": {"target": 3, "notes": "USA total market ETF"}
+    "SHV": {"target": 4.5, "description": "0-1 yr treas. ETF"},
+    "SHY": {"target": 4.5, "description": "1-3 yr treas. ETF"},
+    "VTI": {"target": 3, "description": "USA total market ETF"}
 }
 ```
 
 Each ticker has an object with:
 - `target`: The target allocation percentage for the stock
-- `notes`: A description or note about the stock
+- `description`: A description or note about the stock
 
-If a stock is missing from the targets file, an error will be logged and both the target and notes columns will be empty for that stock.
+If a stock is missing from the targets file, an error will be logged and both the target and description columns will be empty for that stock.

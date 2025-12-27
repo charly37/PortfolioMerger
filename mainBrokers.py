@@ -291,7 +291,7 @@ def validate_targets_sum(targets):
     Validate that the sum of all target values does not exceed 100.
     
     Args:
-        targets: Dictionary mapping stock symbols to target objects with 'target' and 'notes' fields
+        targets: Dictionary mapping stock symbols to target objects with 'target' and 'description' fields
         
     Returns:
         Boolean indicating if targets are valid
@@ -361,13 +361,13 @@ if __name__ == "__main__":
     logging.info(f"Writing positions to file: {args.output}")
     with open(args.output, 'w', newline='') as file2:
         writer = csv.writer(file2)
-        field = ["ticker", "notes", "nbShares", "price", "target"]
+        field = ["ticker", "description", "nbShares", "price", "target"]
         
         writer.writerow(field)
         for aShare in aTotalShares:
             target_obj = targets.get(aShare.symbol, {})
             target_value = target_obj.get('target', '') if target_obj else ''
-            notes_value = target_obj.get('notes', '') if target_obj else ''
+            description_value = target_obj.get('description', '') if target_obj else ''
             if not target_value:
                 logging.error(f"Missing target for stock: {aShare.symbol}")
-            writer.writerow([aShare.symbol, notes_value, aShare.nbShares, aShare.sharePrice, target_value])
+            writer.writerow([aShare.symbol, description_value, aShare.nbShares, aShare.sharePrice, target_value])
