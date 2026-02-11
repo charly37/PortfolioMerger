@@ -19,6 +19,7 @@ def run_test():
     test_files = ['./cs1.csv', './cs2.csv', './Ibkr1.csv']
     output_file = './test_output.csv'
     reference_file = './holdings.csv'
+    targets_file = './targets'
     
     # Verify test files exist
     print("\n1. Verifying test files exist...")
@@ -31,7 +32,7 @@ def run_test():
     
     # Run the main script with --files parameter
     print(f"\n2. Running mainBrokers.py with files: {', '.join(test_files)}")
-    cmd = ['python3', '../../mainBrokers.py', '--files'] + test_files + ['--output', output_file]
+    cmd = ['python3', '../../mainBrokers.py', '--files'] + test_files + ['--output', output_file, '--targets', targets_file]
     print(f"   Command: {' '.join(cmd)}")
     
     try:
@@ -87,7 +88,7 @@ def run_test():
             
             # Check header
             header = rows[0]
-            expected_header = ['ticker', 'nbShares', 'price', 'target']
+            expected_header = ['ticker', 'description', 'nbShares', 'price', 'target']
             if header != expected_header:
                 print(f"   ✗ Invalid header. Expected {expected_header}, got {header}")
                 return False
@@ -103,11 +104,11 @@ def run_test():
             
             # Display sample rows
             print("\n   Sample output (first 10 rows):")
-            print(f"   {'Ticker':<10} {'Shares':<15} {'Price':<15} {'Target':<10}")
-            print(f"   {'-'*10} {'-'*15} {'-'*15} {'-'*10}")
+            print(f"   {'Ticker':<10} {'Description':<20} {'Shares':<15} {'Price':<15} {'Target':<10}")
+            print(f"   {'-'*10} {'-'*20} {'-'*15} {'-'*15} {'-'*10}")
             for row in data_rows[:10]:
-                if len(row) == 4:
-                    print(f"   {row[0]:<10} {row[1]:<15} {row[2]:<15} {row[3]:<10}")
+                if len(row) == 5:
+                    print(f"   {row[0]:<10} {row[1]:<20} {row[2]:<15} {row[3]:<15} {row[4]:<10}")
             
             if len(data_rows) > 10:
                 print(f"   ... and {len(data_rows) - 10} more")
@@ -115,11 +116,11 @@ def run_test():
             # Validate data format
             invalid_rows = []
             for i, row in enumerate(data_rows, start=2):
-                if len(row) != 4:
+                if len(row) != 5:
                     invalid_rows.append(f"Row {i}: Wrong number of columns ({len(row)})")
                     continue
                 
-                ticker, shares, price, target = row
+                ticker, description, shares, price, target = row
                 
                 # Validate shares is a number
                 try:

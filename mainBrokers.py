@@ -56,7 +56,7 @@ def isItOption(aSymbol):
     return bool(re.fullmatch(r"[A-Z]+\s+\d{1,2}/\d{1,2}/\d{4}\s+\d+\.\d{2}\s+[PC]", aSymbol))
 
 def isItASingleStock(aSymbol):
-    single_stocks = ['BILI', 'VEOEY', 'RGTZ', 'PDBA', 'AMZN', 'AMC', 'SPIP', 'BRK/B', 'GOOGL', 'CLSK']
+    single_stocks = ['BILI', 'VEOEY', 'RGTZ', 'PDBA', 'AMZN', 'AMC', 'SPIP', 'BRK/B', 'GOOGL', 'CLSK','GOOG']
     return aSymbol.upper() in single_stocks
 
 def parse_arguments():
@@ -65,6 +65,8 @@ def parse_arguments():
                       help='List of files to process (auto-detects CS or IBKR format)')
     parser.add_argument('--output', default='holdings.csv',
                       help='Output file path (default: holdings.csv)')
+    parser.add_argument('--targets', default='targets',
+                      help='Targets file path (default: targets)')
     parser.add_argument('--debug', action='store_true',
                       help='Enable debug logging level')
     return parser.parse_args()
@@ -96,13 +98,41 @@ def parseLineCs(aLine):
     except Exception as e:
         raise e
 
+def parseLineCs2(aLine):
+    """Parse CS file with new format (2026+) where shares are at index 2 and price at index 3"""
+    # Ignore empty lines
+    if not aLine or all(not cell.strip() for cell in aLine):
+        raise EmptyLineException("Empty line")
+    
+    try:
+        aTicker = aLine[0]
+        logging.debug(f"Processing CS ticker (new format): {aTicker}")
+        if isItOption(aTicker):
+            logging.debug(f"Skipping option: {aTicker}")
+            raise OptionDetectedException(f"Option detected: {aTicker}")
+        if isItASingleStock(aTicker):
+            logging.debug(f"Skipping single stock: {aTicker}")
+            raise SingleStockDetectedException(f"Single stock detected: {aTicker}")
+        if not isItProperSymbol(aTicker):
+            logging.debug(f"Invalid symbol: {aTicker}")
+            raise ValueError(f"Invalid symbol: {aTicker}")
+        aNewShare = aShare(aTicker)
+        aNewShare.nbShares = int(aLine[2])  # New format: shares at index 2
+        logging.debug(f"aNewShare.nbShares: {aNewShare.nbShares}")
+        aNewShare.sharePrice = float(aLine[3])  # New format: price at index 3
+        return aNewShare
+    except OptionDetectedException as e:
+        raise e
+    except Exception as e:
+        raise e
+
 
 def loadSharesCs(ioaShares, filename):
     with open(filename, newline='') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in spamreader:
             try:    
-                aNewShare1 = parseLineCs(row)
+                aNewShare1 = parseLineCs2(row)
                 ioaShares.append(aNewShare1)
             except OptionDetectedException as e:
                 logging.info(e)
@@ -355,7 +385,7 @@ if __name__ == "__main__":
     aTotalShares = merge_lists(aTotalShares, aSharesIBKR, merge_objects)
 
     # Load targets
-    targets = load_targets('targets')
+    targets = load_targets(args.targets)
     validate_targets_sum(targets)
     
     logging.info(f"Writing positions to file: {args.output}")
@@ -368,6 +398,6 @@ if __name__ == "__main__":
             target_obj = targets.get(aShare.symbol, {})
             target_value = target_obj.get('target', '') if target_obj else ''
             description_value = target_obj.get('description', '') if target_obj else ''
-            if not target_value:
+            if target_value == '':
                 logging.error(f"Missing target for stock: {aShare.symbol}")
             writer.writerow([aShare.symbol, description_value, aShare.nbShares, aShare.sharePrice, target_value])
