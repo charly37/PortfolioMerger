@@ -388,10 +388,20 @@ if __name__ == "__main__":
     targets = load_targets(args.targets)
     validate_targets_sum(targets)
     
+    # Calculate total portfolio value first
+    logging.info("Calculating total portfolio value")
+    total_portfolio_value = 0.0
+    for aShare in aTotalShares:
+        holding_value = aShare.nbShares * aShare.sharePrice
+        total_portfolio_value += holding_value
+    
+    logging.warning(f"Total Portfolio Value: ${total_portfolio_value:,.2f}")
+    
+    # Write positions to file with allocation percentages
     logging.info(f"Writing positions to file: {args.output}")
     with open(args.output, 'w', newline='') as file2:
         writer = csv.writer(file2)
-        field = ["ticker", "description", "nbShares", "price", "target"]
+        field = ["ticker", "description", "nbShares", "price", "currentAllocation", "target"]
         
         writer.writerow(field)
         for aShare in aTotalShares:
@@ -400,4 +410,12 @@ if __name__ == "__main__":
             description_value = target_obj.get('description', '') if target_obj else ''
             if target_value == '':
                 logging.error(f"Missing target for stock: {aShare.symbol}")
-            writer.writerow([aShare.symbol, description_value, aShare.nbShares, aShare.sharePrice, target_value])
+            
+            # Calculate current allocation percentage
+            holding_value = aShare.nbShares * aShare.sharePrice
+            current_allocation = (holding_value / total_portfolio_value * 100) if total_portfolio_value > 0 else 0
+            
+            writer.writerow([aShare.symbol, description_value, aShare.nbShares, aShare.sharePrice, 
+                           f"{current_allocation:.2f}", target_value])
+    
+    print(f"\nTotal Portfolio Value: ${total_portfolio_value:,.2f}")
