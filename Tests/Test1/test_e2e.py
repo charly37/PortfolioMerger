@@ -88,7 +88,7 @@ def run_test():
             
             # Check header
             header = rows[0]
-            expected_header = ['ticker', 'description', 'nbShares', 'price', 'currentAllocation', 'target']
+            expected_header = ['ticker', 'description', 'nbShares', 'price', 'currentAllocation', 'target', 'sharesToTarget']
             if header != expected_header:
                 print(f"   ✗ Invalid header. Expected {expected_header}, got {header}")
                 return False
@@ -104,11 +104,11 @@ def run_test():
             
             # Display sample rows
             print("\n   Sample output (first 10 rows):")
-            print(f"   {'Ticker':<10} {'Description':<20} {'Shares':<10} {'Price':<10} {'Current%':<10} {'Target%':<10}")
-            print(f"   {'-'*10} {'-'*20} {'-'*10} {'-'*10} {'-'*10} {'-'*10}")
+            print(f"   {'Ticker':<10} {'Description':<20} {'Shares':<10} {'Price':<10} {'Current%':<10} {'Target%':<10} {'ToBuy/Sell':<12}")
+            print(f"   {'-'*10} {'-'*20} {'-'*10} {'-'*10} {'-'*10} {'-'*10} {'-'*12}")
             for row in data_rows[:10]:
-                if len(row) == 6:
-                    print(f"   {row[0]:<10} {row[1]:<20} {row[2]:<10} {row[3]:<10} {row[4]:<10} {row[5]:<10}")
+                if len(row) == 7:
+                    print(f"   {row[0]:<10} {row[1]:<20} {row[2]:<10} {row[3]:<10} {row[4]:<10} {row[5]:<10} {row[6]:<12}")
             
             if len(data_rows) > 10:
                 print(f"   ... and {len(data_rows) - 10} more")
@@ -116,11 +116,11 @@ def run_test():
             # Validate data format
             invalid_rows = []
             for i, row in enumerate(data_rows, start=2):
-                if len(row) != 6:
+                if len(row) != 7:
                     invalid_rows.append(f"Row {i}: Wrong number of columns ({len(row)})")
                     continue
                 
-                ticker, description, shares, price, current_allocation, target = row
+                ticker, description, shares, price, current_allocation, target, shares_to_target = row
                 
                 # Validate shares is a number
                 try:
@@ -146,6 +146,13 @@ def run_test():
                         float(target)
                     except ValueError:
                         invalid_rows.append(f"Row {i}: Invalid target value '{target}'")
+                
+                # Validate shares_to_target is a number or empty
+                if shares_to_target:
+                    try:
+                        float(shares_to_target)
+                    except ValueError:
+                        invalid_rows.append(f"Row {i}: Invalid shares to target value '{shares_to_target}'")
             
             if invalid_rows:
                 print(f"\n   ✗ Found {len(invalid_rows)} invalid row(s):")

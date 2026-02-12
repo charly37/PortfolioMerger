@@ -401,7 +401,7 @@ if __name__ == "__main__":
     logging.info(f"Writing positions to file: {args.output}")
     with open(args.output, 'w', newline='') as file2:
         writer = csv.writer(file2)
-        field = ["ticker", "description", "nbShares", "price", "currentAllocation", "target"]
+        field = ["ticker", "description", "nbShares", "price", "currentAllocation", "target", "sharesToTarget"]
         
         writer.writerow(field)
         for aShare in aTotalShares:
@@ -415,7 +415,16 @@ if __name__ == "__main__":
             holding_value = aShare.nbShares * aShare.sharePrice
             current_allocation = (holding_value / total_portfolio_value * 100) if total_portfolio_value > 0 else 0
             
+            # Calculate shares needed to reach target allocation
+            shares_to_target = ''
+            if target_value != '' and aShare.sharePrice > 0:
+                target_value_dollars = (float(target_value) / 100) * total_portfolio_value
+                current_value_dollars = holding_value
+                difference_dollars = target_value_dollars - current_value_dollars
+                shares_needed = difference_dollars / aShare.sharePrice
+                shares_to_target = f"{shares_needed:.0f}"
+            
             writer.writerow([aShare.symbol, description_value, aShare.nbShares, aShare.sharePrice, 
-                           f"{current_allocation:.2f}", target_value])
+                           f"{current_allocation:.2f}", target_value, shares_to_target])
     
     print(f"\nTotal Portfolio Value: ${total_portfolio_value:,.2f}")
