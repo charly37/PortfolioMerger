@@ -1,0 +1,632 @@
+{
+    "SHV": {
+        "target_ibkr": 5,
+        "target_cs": 5,
+        "target_global": 5,
+        "target_ira": 6,
+        "mynotes": ""
+    },
+    "SHY": {
+        "target_ibkr": 4,
+        "target_cs": 4,
+        "target_global": 4,
+        "target_ira": 6,
+        "mynotes": ""
+    },
+    "CQQQ": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "VIGI": {
+        "target_ibkr": 1.5,
+        "target_cs": 1.5,
+        "target_global": 1.5,
+        "target_ira": 3,
+        "mynotes": ""
+    },
+    "CLSK": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "PDBA": {
+        "target_ibkr": 0,
+        "target_cs": 0,
+        "target_global": 0,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "JNK": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 1,
+        "target_ira": 3,
+        "mynotes": ""
+    },
+    "REZ": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 1.5,
+        "mynotes": ""
+    },
+    "VYM": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "CGW": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "GDX": {
+        "target_ibkr": 3,
+        "target_cs": 3,
+        "target_global": 3,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "WDGF": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "URNM": {
+        "target_ibkr": 0,
+        "target_cs": 0,
+        "target_global": 0,
+        "target_ira": 0,
+        "mynotes": "URA overlap and lower fee"
+    },
+    "UAE": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "VCSH": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "IXC": {
+        "target_ibkr": 1.5,
+        "target_cs": 1.5,
+        "target_global": 1.5,
+        "target_ira": 1.5,
+        "mynotes": ""
+    },
+    "EMXC": {
+        "target_ibkr": 2,
+        "target_cs": 2,
+        "target_global": 2,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "VWOB": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "VIG": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "VNQI": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "HTEC": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "BIL": {
+        "target_ibkr": 0,
+        "target_cs": 0,
+        "target_global": 0,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "ROBO": {
+        "target_ibkr": 0,
+        "target_cs": 0,
+        "target_global": 0,
+        "target_ira": 0,
+        "mynotes": "BOTZ similar with lower fees"
+    },
+    "FLLA": {
+        "target_ibkr": 2.5,
+        "target_cs": 2.5,
+        "target_global": 2.5,
+        "target_ira": 1.5,
+        "mynotes": ""
+    },
+    "PDBC": {
+        "target_ibkr": 1.5,
+        "target_cs": 1.5,
+        "target_global": 1.5,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "SCHI": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "BNDX": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1.5,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "IBB": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "PSCT": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "QQQ": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "VXUS": {
+        "target_ibkr": 3,
+        "target_cs": 3,
+        "target_global": 3,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "VYMI": {
+        "target_ibkr": 1.5,
+        "target_cs": 1.5,
+        "target_global": 1.5,
+        "target_ira": 3,
+        "mynotes": ""
+    },
+    "NURE": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "VEA": {
+        "target_ibkr": 2,
+        "target_cs": 2,
+        "target_global": 2,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "GLTR": {
+        "target_ibkr": 4,
+        "target_cs": 4,
+        "target_global": 4,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "VT": {
+        "target_ibkr": 5,
+        "target_cs": 5,
+        "target_global": 5,
+        "target_ira": 4,
+        "mynotes": ""
+    },
+    "KXI": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1.5,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "SPHD": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "PNQI": {
+        "target_ibkr": 0,
+        "target_cs": 0,
+        "target_global": 0,
+        "target_ira": 0,
+        "mynotes": "use QQQ instead"
+    },
+    "ARGT": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "ITB": {
+        "target_ibkr": 0,
+        "target_cs": 0,
+        "target_global": 0,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "TUR": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "IEMG": {
+        "target_ibkr": 2,
+        "target_cs": 2,
+        "target_global": 2,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "SCHP": {
+        "target_ibkr": 0,
+        "target_cs": 0,
+        "target_global": 0,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "KMLM": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 1.5,
+        "mynotes": ""
+    },
+    "SKYY": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "ETHA": {
+        "target_ibkr": 1.5,
+        "target_cs": 1.5,
+        "target_global": 1.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "ETHB": {
+        "target_ibkr": 1.5,
+        "target_cs": 1.5,
+        "target_global": 1.5,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "REET": {
+        "target_ibkr": 1.5,
+        "target_cs": 1.5,
+        "target_global": 1.5,
+        "target_ira": 1.5,
+        "mynotes": ""
+    },
+    "SMH": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "IXJ": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "DTCR": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "SPYI": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "DIVO": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "BCI": {
+        "target_ibkr": 2,
+        "target_cs": 2,
+        "target_global": 2,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "XAR": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "HODL": {
+        "target_ibkr": 2,
+        "target_cs": 2,
+        "target_global": 2,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "EPHE": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "VTI": {
+        "target_ibkr": 3,
+        "target_cs": 3,
+        "target_global": 3,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "URA": {
+        "target_ibkr": 2,
+        "target_cs": 2,
+        "target_global": 2,
+        "target_ira": 0,
+        "mynotes": "lower fee than URNM and URA also hold miner so i switch to URA only"
+    },
+    "SCHA": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "SPIP": {
+        "target_ibkr": 0,
+        "target_cs": 0,
+        "target_global": 0,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "MOO": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "BKF": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "BOTZ": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "EFV": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "DIVB": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 1.5,
+        "mynotes": ""
+    },
+    "EVX": {
+        "target_ibkr": 0,
+        "target_cs": 0,
+        "target_global": 0,
+        "target_ira": 0,
+        "mynotes": "close it to reduce pos"
+    },
+    "EWS": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "VNQ": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "EWJ": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "VGK": {
+        "target_ibkr": 1.5,
+        "target_cs": 1.5,
+        "target_global": 1.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "VO": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "PPA": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "SCHO": {
+        "target_ibkr": 4,
+        "target_cs": 4,
+        "target_global": 4,
+        "target_ira": 6,
+        "mynotes": ""
+    },
+    "DBMF": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 1.5,
+        "mynotes": ""
+    },
+    "BOXX": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "SCHD": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "VNM": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "EPOL": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "SGOV": {
+        "target_ibkr": 5,
+        "target_cs": 5,
+        "target_global": 5,
+        "target_ira": 7,
+        "mynotes": ""
+    },
+    "VUSB": {
+        "target_ibkr": 5,
+        "target_cs": 5,
+        "target_global": 5,
+        "target_ira": 5,
+        "mynotes": ""
+    },
+    "VTIP": {
+        "target_ibkr": 0,
+        "target_cs": 0,
+        "target_global": 0,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "EFAV": {
+        "target_ibkr": 1,
+        "target_cs": 1,
+        "target_global": 1,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "IGOV": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 1.5,
+        "mynotes": ""
+    },
+    "EXI": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "PAVE": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    },
+    "EMLC": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 2,
+        "mynotes": ""
+    },
+    "KWEB": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 1,
+        "mynotes": ""
+    },
+    "AQWA": {
+        "target_ibkr": 0.5,
+        "target_cs": 0.5,
+        "target_global": 0.5,
+        "target_ira": 0,
+        "mynotes": ""
+    }
+}

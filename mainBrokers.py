@@ -56,17 +56,23 @@ def isItOption(aSymbol):
     return bool(re.fullmatch(r"[A-Z]+\s+\d{1,2}/\d{1,2}/\d{4}\s+\d+\.\d{2}\s+[PC]", aSymbol))
 
 def isItASingleStock(aSymbol):
-    single_stocks = ['BILI', 'VEOEY', 'RGTZ', 'PDBA', 'AMZN', 'AMC', 'SPIP', 'BRK/B', 'GOOGL', 'CLSK','GOOG']
+    single_stocks = ['MSFT', 'SBIT', 'IBM', 'BILI', 'VEOEY', 'VEEV', 'NOW', 'AMZN', 'AMC', 'SPIP', 'BRK/B', 'GOOGL', 'CLSK','GOOG','DOCS','ADSK','WDAY','CRM']
     return aSymbol.upper() in single_stocks
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process shares data from CS and IBKR.')
-    parser.add_argument('--files', nargs='+',
-                      help='List of files to process (auto-detects CS or IBKR format)')
+    parser.add_argument('--ibkr', type=str, default=None,
+                      help='IBKR account positions CSV file')
+    parser.add_argument('--cs', type=str, default=None,
+                      help='Charles Schwab brokerage account positions CSV file')
+    parser.add_argument('--ira', type=str, default=None,
+                      help='IRA (Charles Schwab) account positions CSV file')
     parser.add_argument('--output', default='holdings.csv',
                       help='Output file path (default: holdings.csv)')
-    parser.add_argument('--targets', default='targets',
-                      help='Targets file path (default: targets)')
+    parser.add_argument('--target', type=str, default='targets.json',
+                      help='Target JSON file path (default: targets.json)')
+    parser.add_argument('--fund-info', type=str, default='fund_info.json',
+                      help='Fund info JSON file path for descriptions (default: fund_info.json)')
     parser.add_argument('--debug', action='store_true',
                       help='Enable debug logging level')
     return parser.parse_args()
@@ -316,36 +322,60 @@ def load_targets(targets_file='targets'):
         logging.error(f"Error parsing targets file: {e}")
         return {}
 
-def validate_targets_sum(targets):
+def load_fund_info(fund_info_file='fund_info.json'):
+    """
+    Load fund descriptions from fund_info JSON file.
+
+    Args:
+        fund_info_file: Path to the fund_info JSON file
+
+    Returns:
+        Dictionary mapping stock symbols to fund info objects
+    """
+    try:
+        with open(fund_info_file, 'r') as f:
+            fund_info = json.load(f)
+        logging.info(f"Loaded {len(fund_info)} fund info entries from {fund_info_file}")
+        return fund_info
+    except FileNotFoundError:
+        logging.warning(f"Fund info file '{fund_info_file}' not found. No descriptions will be added.")
+        return {}
+    except json.JSONDecodeError as e:
+        logging.error(f"Error parsing fund info file: {e}")
+        return {}
+
+def validate_targets_sum(targets, target_field='target', account_label='global'):
     """
     Validate that the sum of all target values does not exceed 100.
     
     Args:
-        targets: Dictionary mapping stock symbols to target objects with 'target' and 'description' fields
+        targets: Dictionary mapping stock symbols to target objects
+        target_field: The field name to use for the target value
+        account_label: Human-readable label for the account (used in log messages)
         
     Returns:
         Boolean indicating if targets are valid
     """
     if not targets:
-        logging.warning("No targets to validate")
+        logging.warning(f"[{account_label}] No targets to validate")
         return True
     
     try:
         # Convert all target values to float and sum them
-        total = sum(float(value['target']) for value in targets.values() if value and 'target' in value)
-        logging.info(f"Total target allocation: {total}%")
+        total = sum(float(value[target_field]) for value in targets.values() if value and target_field in value)
+        logging.info(f"[{account_label}] Total target allocation: {total}%")
         
         if total > 100:
-            logging.error(f"Target allocation exceeds 100%: {total}%")
+            logging.error(f"[{account_label}] Target allocation exceeds 100%: {total}%")
             return False
         elif total < 100:
-            logging.warning(f"Target allocation is less than 100%: {total}%")
+            logging.warning(f"[{account_label}] Target allocation is less than 100%: {total}%")
         else:
-            logging.info(f"Target allocation is exactly 100%")
+            logging.info(f"[{account_label}] Target allocation is exactly 100%")
         
         return True
     except (ValueError, TypeError) as e:
-        logging.error(f"Error validating targets: {e}")
+        logging.error(f"[{account_label}] Error validating targets: {e}")
         return False
     
 if __name__ == "__main__":
@@ -354,77 +384,141 @@ if __name__ == "__main__":
     setup_logging(debug=args.debug)
     logging.info("Starting PortfolioMerger - Merging positions from CS and IBKR")
     
-    aSharesIBKR = []
     aTotalShares = []
+    shares_by_account = {'ibkr': {}, 'cs': {}, 'ira': {}}
 
-    # Use generic file loading if --files is provided
-    if args.files:
-        logging.info("Loading share infos from provided files (auto-detecting format)")
-        for file_path in args.files:
-            logging.debug(f"Loading share infos from file: {file_path}")
-            aTempShares = []
-            load_shares_generic(aTempShares, file_path)
-            aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
-            logging.info(f"Total shares after merging file {file_path}: {len(aTotalShares)}")
+    # Load share infos from named account files
+    if not any([args.ibkr, args.cs, args.ira]):
+        logging.error("No files provided. Use --ibkr, --cs, and/or --ira to specify input files.")
+        exit(1)
+
+    if args.ibkr:
+        logging.info(f"Loading IBKR file: {args.ibkr}")
+        aTempShares = []
+        loadSharesIBKR(aTempShares, args.ibkr)
+        shares_by_account['ibkr'] = {s.symbol: s for s in aTempShares}
+        aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
+        logging.info(f"Total shares after merging IBKR file: {len(aTotalShares)}")
+
+    if args.cs:
+        logging.info(f"Loading CS file: {args.cs}")
+        aTempShares = []
+        loadSharesCs(aTempShares, args.cs)
+        shares_by_account['cs'] = {s.symbol: s for s in aTempShares}
+        aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
+        logging.info(f"Total shares after merging CS file: {len(aTotalShares)}")
+
+    if args.ira:
+        logging.info(f"Loading IRA file: {args.ira}")
+        aTempShares = []
+        loadSharesCs(aTempShares, args.ira)
+        shares_by_account['ira'] = {s.symbol: s for s in aTempShares}
+        aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
+        logging.info(f"Total shares after merging IRA file: {len(aTotalShares)}")
+
+    # Determine which target field to use based on which accounts were provided
+    accounts_provided = [a for a in ['ibkr', 'cs', 'ira'] if getattr(args, a)]
+    if len(accounts_provided) == 1:
+        target_field = f'target_{accounts_provided[0]}'
     else:
-        # Legacy mode: use separate CS and IBKR files
-        logging.info("Loading CS share infos")
-        aCsFiles = args.cs_files
-        for cs_file in aCsFiles:   
-            logging.info(f"Loading CS share infos from file: {cs_file}") 
-            aTempShares = []
-            loadSharesCs(aTempShares, cs_file)
-            aTotalShares = merge_lists(aTotalShares, aTempShares, merge_objects)
-            logging.info(f"Total shares after merging file {cs_file}: {len(aTotalShares)}")
-
-        logging.info("Loading IBKR share info")
-        loadSharesIBKR(aSharesIBKR, args.ibkr_file)
-
-        aTotalShares = merge_lists(aTotalShares, aSharesIBKR, merge_objects)
-
-    aTotalShares = merge_lists(aTotalShares, aSharesIBKR, merge_objects)
+        target_field = 'target_global'
 
     # Load targets
-    targets = load_targets(args.targets)
-    validate_targets_sum(targets)
+    logging.info(f"Using target file: {args.target}, target field: {target_field}")
+    targets = load_targets(args.target)
+    # Fall back to 'target' if the resolved field is not present in the file (old format)
+    sample = next(iter(targets.values()), {})
+    if target_field not in sample and 'target' in sample:
+        logging.info(f"Field '{target_field}' not found in targets file, falling back to 'target'")
+        target_field = 'target'
+    validate_targets_sum(targets, target_field, account_label='global')
+
+    # Validate per-account allocations
+    for account in ['ibkr', 'cs', 'ira']:
+        acct_field = f'target_{account}'
+        sample_acct = next(iter(targets.values()), {})
+        if acct_field in sample_acct:
+            validate_targets_sum(targets, acct_field, account_label=account.upper())
+
+    # Load fund info (descriptions)
+    logging.info(f"Using fund info file: {args.fund_info}")
+    fund_info = load_fund_info(args.fund_info)
     
-    # Calculate total portfolio value first
-    logging.info("Calculating total portfolio value")
+    # Calculate total and per-account portfolio values
+    logging.info("Calculating portfolio values")
     total_portfolio_value = 0.0
     for aShare in aTotalShares:
-        holding_value = aShare.nbShares * aShare.sharePrice
-        total_portfolio_value += holding_value
-    
+        total_portfolio_value += aShare.nbShares * aShare.sharePrice
+
+    portfolio_value_by_account = {}
+    for account in ['ibkr', 'cs', 'ira']:
+        portfolio_value_by_account[account] = sum(
+            s.nbShares * s.sharePrice for s in shares_by_account[account].values()
+        )
+
     logging.warning(f"Total Portfolio Value: ${total_portfolio_value:,.2f}")
-    
+    for account in ['ibkr', 'cs', 'ira']:
+        logging.warning(f"  {account.upper()} Portfolio Value: ${portfolio_value_by_account[account]:,.2f}")
+
     # Write positions to file with allocation percentages
     logging.info(f"Writing positions to file: {args.output}")
     with open(args.output, 'w', newline='') as file2:
         writer = csv.writer(file2)
-        field = ["ticker", "description", "nbShares", "price", "currentAllocation", "target", "sharesToTarget"]
-        
+        field = [
+            "ticker", "description", "sec_yield_30d", "ttm_yield",
+            "nbShares", "nbShares_ibkr", "nbShares_cs", "nbShares_ira",
+            "price",
+            "currentAllocation", "currentAllocation_ibkr", "currentAllocation_cs", "currentAllocation_ira",
+            "target_global", "target_ibkr", "target_cs", "target_ira",
+            "sharesToTarget_ibkr", "sharesToTarget_cs", "sharesToTarget_ira"
+        ]
+
         writer.writerow(field)
         for aShare in aTotalShares:
             target_obj = targets.get(aShare.symbol, {})
-            target_value = target_obj.get('target', '') if target_obj else ''
-            description_value = target_obj.get('description', '') if target_obj else ''
-            if target_value == '':
-                logging.error(f"Missing target for stock: {aShare.symbol}")
-            
-            # Calculate current allocation percentage
+            fund_obj = fund_info.get(aShare.symbol, {})
+            description_value = fund_obj.get('description', '') if fund_obj else ''
+            sec_yield_30d_value = (fund_obj.get('sec_yield_30d', '') or '').replace('%', '') if fund_obj else ''
+            ttm_yield_value = (fund_obj.get('ttm_yield', '') or '').replace('%', '') if fund_obj else ''
+
+            # Total allocation
             holding_value = aShare.nbShares * aShare.sharePrice
             current_allocation = (holding_value / total_portfolio_value * 100) if total_portfolio_value > 0 else 0
-            
-            # Calculate shares needed to reach target allocation
-            shares_to_target = ''
-            if target_value != '' and aShare.sharePrice > 0:
-                target_value_dollars = (float(target_value) / 100) * total_portfolio_value
-                current_value_dollars = holding_value
-                difference_dollars = target_value_dollars - current_value_dollars
-                shares_needed = difference_dollars / aShare.sharePrice
-                shares_to_target = f"{shares_needed:.0f}"
-            
-            writer.writerow([aShare.symbol, description_value, aShare.nbShares, aShare.sharePrice, 
-                           f"{current_allocation:.2f}", target_value, shares_to_target])
+
+            # Per-account data
+            nb_by_acct = {}
+            alloc_by_acct = {}
+            shares_to_target_by_acct = {}
+            for account in ['ibkr', 'cs', 'ira']:
+                acct_share = shares_by_account[account].get(aShare.symbol)
+                nb = acct_share.nbShares if acct_share else 0
+                nb_by_acct[account] = nb
+                acct_value = nb * aShare.sharePrice
+                acct_total = portfolio_value_by_account[account]
+                alloc_by_acct[account] = f"{(acct_value / acct_total * 100):.2f}" if acct_total > 0 else '0.00'
+                acct_target = target_obj.get(f'target_{account}', '') if target_obj else ''
+                if acct_target != '' and aShare.sharePrice > 0:
+                    target_dollars = (float(acct_target) / 100) * acct_total
+                    shares_needed = (target_dollars - acct_value) / aShare.sharePrice
+                    shares_to_target_by_acct[account] = f"{shares_needed:.0f}"
+                else:
+                    shares_to_target_by_acct[account] = ''
+
+            target_global = target_obj.get('target_global', target_obj.get('target', '')) if target_obj else ''
+            target_ibkr   = target_obj.get('target_ibkr', '') if target_obj else ''
+            target_cs     = target_obj.get('target_cs', '') if target_obj else ''
+            target_ira    = target_obj.get('target_ira', '') if target_obj else ''
+
+            if target_global == '':
+                logging.error(f"Missing target for stock: {aShare.symbol}")
+
+            writer.writerow([
+                aShare.symbol, description_value, sec_yield_30d_value, ttm_yield_value,
+                aShare.nbShares, nb_by_acct['ibkr'], nb_by_acct['cs'], nb_by_acct['ira'],
+                aShare.sharePrice,
+                f"{current_allocation:.2f}", alloc_by_acct['ibkr'], alloc_by_acct['cs'], alloc_by_acct['ira'],
+                target_global, target_ibkr, target_cs, target_ira,
+                shares_to_target_by_acct['ibkr'], shares_to_target_by_acct['cs'], shares_to_target_by_acct['ira']
+            ])
     
     print(f"\nTotal Portfolio Value: ${total_portfolio_value:,.2f}")

@@ -1,5 +1,0 @@
-{
-    "BIL": {"target": 80, "description": "US Tbill ETF", "mynotes": ""},
-    "ARGT": {"target": 10, "description": "Argentina ETF", "mynotes": ""},
-    "KWEB": {"target": 10, "description": "Tech chiness companies", "mynotes": ""}
-}
